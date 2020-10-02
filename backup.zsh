@@ -2,6 +2,16 @@
 
 function create_backup_string () {
 
+  # Extract first argument which specifies the type of backup string to be
+  # created; options are minutely, hourly, daily, weekly, monthly.
+  success=0
+  [[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'weekly' || $1 = 'monthly' ]] || { print -P "%B%F{red}ERROR:%b%f incorrect use of $0"; success=-1 }
+  # This still doesn't fix th issue, the ERROR print statement above never gets
+  # printed in the event this test fails and the function returns. I cannot
+  # figure out why.
+  [[ $success != '0' ]] && return -1
+
+  prefix="$1_"
   full_prefix="full_"
   incr_prefix="incr_"
   backup_root="backup_"
@@ -9,9 +19,10 @@ function create_backup_string () {
 
   time_stamp=$(date $date_format)
 
-  echo "$backup_root$time_stamp"
+  echo "$prefix$backup_root$time_stamp"
   #echo "$full_prefix$backup_root$time_stamp"
   #echo "$incr_prefix$backup_root$time_stamp"
+  return 0
 }
 
 backupSource="/Users/ehereth/Downloads"
