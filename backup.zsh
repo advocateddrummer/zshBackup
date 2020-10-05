@@ -25,6 +25,8 @@ function create_backup_string () {
   return 0
 }
 
+backupType=""
+[[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'daily' || $1 = 'weekly' || $1 = 'monthly' ]] && backupType=$1 || { print -P "%B%F{red}ERROR:%b%f incorrect backup type specifed"; exit }
 backupSource="/Users/ehereth/Downloads"
 backupDestRoot="/tmp/backups/"
 
@@ -32,7 +34,9 @@ backupDestRoot="/tmp/backups/"
 [[ ( -d $backupSource ) ]] && echo "backup source directory <$backupSource> exists" || print -P "%B%F{red}backup source directory <$backupSource> does not exist%f%b"
 [[ ( -d $backupDestRoot ) ]] && echo "backup destination directory <$backupDestRoot> exists" || print -P "%B%F{red}backup destination directory <$backupDestRoot> does not exist%f%b"
 
-backupDir=$(create_backup_string)
+backupDir=$(create_backup_string $backupType)
+# Somehow, create_backup_string failed; do not proceed.
+[[ $? != 0 ]] && exit
 backupDest=$backupDestRoot$backupDir
 
 # Zsh colors are tricky.
