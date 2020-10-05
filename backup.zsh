@@ -95,4 +95,4 @@ echo
 #print -nP "%B%F{green}Creating backup directory: <$backupDest>%f%b"
 print -P "Creating backup directory: <$backupDest>"
 
-mkdir $backupDest && print -P "\t%B%F{green}Success!!!%f%b" || print -P "\t%B%F{red}Failed to create <$backupDir> ... exiting!!!%f%b"; exit
+mkdir $backupDest && print -P "\t%B%F{green}Success!!!%f%b" || { print -P "\t%B%F{red}Failed to create <$backupDir> ... exiting!!!%f%b"; exit }
