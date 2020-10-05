@@ -5,7 +5,7 @@ function create_backup_string () {
   # Extract first argument which specifies the type of backup string to be
   # created; options are minutely, hourly, daily, weekly, monthly.
   success=0
-  [[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'weekly' || $1 = 'monthly' ]] || { print -P "%B%F{red}ERROR:%b%f incorrect use of $0"; success=-1 }
+  [[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'daily' || $1 = 'weekly' || $1 = 'monthly' ]] || { print -P "%B%F{red}ERROR:%b%f incorrect use of $0"; success=-1 }
   # This still doesn't fix th issue, the ERROR print statement above never gets
   # printed in the event this test fails and the function returns. I cannot
   # figure out why.
