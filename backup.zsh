@@ -96,3 +96,44 @@ echo
 print -P "Creating backup directory: <$backupDest>"
 
 mkdir $backupDest && print -P "\t%B%F{green}Success!!!%f%b" || { print -P "\t%B%F{red}Failed to create <$backupDir> ... exiting!!!%f%b"; exit }
+
+# Perform the rsync backup.
+
+echo "Performing $backupType backup using rsync..."
+previousBackup=''
+case $backupType in
+  'minutely')
+    print -P "Performing a %B%F{green}$backupType%b%f backup"
+    previousBackup=$minutelyBackups[1]
+    print -P "\tPrevious $backupType backup is $minutelyBackups[1]"
+    ;;
+  'hourly')
+    print -P "Performing a %B%F{green}$backupType%b%f backup"
+    previousBackup=$hourlyBackups[1]
+    print -P "\tPrevious $backupType backup is $hourlyBackups[1]"
+    ;;
+  'daily')
+    print -P "Performing a %B%F{green}$backupType%b%f backup"
+    previousBackup=$dailyBackups[1]
+    print -P "\tPrevious $backupType backup is $dailyBackups[1]"
+    ;;
+  'weekly')
+    print -P "Performing a %B%F{green}$backupType%b%f backup"
+    previousBackup=$weeklyBackups[1]
+    print -P "\tPrevious $backupType backup is $weeklyBackups[1]"
+    ;;
+  'monthly')
+    print -P "Performing a %B%F{green}$backupType%b%f backup"
+    previousBackup=$monthlyBackups[1]
+    print -P "\tPrevious $backupType backup is $monthlyBackups[1]"
+    ;;
+  *)
+    print -P "%B%F{red}ERROR%f%b Nope"
+    exit
+    ;;
+esac
+
+# This works even if '--link-dest' is empty.
+/usr/bin/rsync --verbose --archive --delete --link-dest=$previousBackup $backupSource $backupDest
+
+print -P "%B%F{green}Done%f%b"
