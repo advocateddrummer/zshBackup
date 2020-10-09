@@ -190,6 +190,7 @@ previousBackup=($backupDestRoot'latestBackup'(:AN))
 echo "previousBackup is $previousBackup..."
 # Perform the rsync backup.
 echo "Performing $backupType backup using rsync..."
+echo "##########################################################################################"
 
 # This works even if '--link-dest' is empty.
 /usr/bin/rsync --verbose --archive --delete --link-dest=$previousBackup $backupSource $backupDest
@@ -198,4 +199,5 @@ echo "Performing $backupType backup using rsync..."
 #unlink $backupDestRoot'latestBackup'
 ln -sfn $backupDest $backupDestRoot'latestBackup'
 
-print -P "%B%F{green}Done%f%b"
+echo "##########################################################################################"
+print -P "%B%F{green}Backup Complete%f%b"
