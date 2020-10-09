@@ -25,10 +25,54 @@ function create_backup_string () {
   return 0
 }
 
-backupType=""
-[[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'daily' || $1 = 'weekly' || $1 = 'monthly' ]] && backupType=$1 || { print -P "%B%F{red}ERROR:%b%f incorrect backup type specifed"; exit }
 backupSource="/Users/ehereth/Downloads"
 backupDestRoot="/tmp/backups/"
+
+# This function is meant to determine what sort of backup job should be run. I
+# intend this to be run using cron and it is difficult to set up cron such that
+# a daily backup does not run when a 'higher order' backup, i.e., weekly or
+# monthly, is running.
+function get_backup_type () {
+  # Get list of 'backup_schedule.xxxxx' files which are created by cron. The
+  # (:t) filter results in just the file name, not the entire path.
+  backupShedules=($1'backup_schedule'*(:t))
+  #echo "There are $#backupShedules schedule files:"
+  #print -P "${backupShedules[@]}"
+  if (( $backupShedules[(I)backup_schedule.monthly] )); then
+    echo 'monthly'
+  elif (( $backupShedules[(I)backup_schedule.weekly] )); then
+    echo 'weekly'
+  elif (( $backupShedules[(I)backup_schedule.daily] )); then
+    echo 'daily'
+  elif (( $backupShedules[(I)backup_schedule.hourly] )); then
+    echo 'hourly'
+  elif (( $backupShedules[(I)backup_schedule.minutely] )); then
+    echo 'minutely'
+  else
+    echo "NOPE"
+  fi
+
+  #for s ($backupShedules) {
+  #  ext=$s:t:e
+  #  echo "$s has extention $ext"
+  #}
+}
+
+backupType=$(get_backup_type $backupDestRoot)
+#echo "backupType = $backupType"
+
+# Skip the backup being run if it does not match the type obtained by
+# get_backup_type above. This can happen when this script is being used with
+# cron and when a scheduled daily backup is being run when a scheduled hourly
+# backup is also scheduled. This script will cancel all 'lower' order backups
+# scheduled at the same time in favor of the 'highest' order backup.
+[[ $1 = $backupType ]] || { print -P "%B%F{red}Skipping $1 backup%b%f"; exit }
+
+# Clean up cron generated 'schedule' files.
+for f ($backupDestRoot'backup_schedule'*) {
+  rm -rf $f
+}
+#[[ $1 = 'minutely' || $1 = 'hourly' || $1 = 'daily' || $1 = 'weekly' || $1 = 'monthly' ]] && backupType=$1 || { print -P "%B%F{red}ERROR:%b%f incorrect backup type specifed"; exit }
 
 # Check for existence of backup directories.
 [[ ( -d $backupSource ) ]] && echo "backup source directory <$backupSource> exists" || print -P "%B%F{red}backup source directory <$backupSource> does not exist%f%b"
