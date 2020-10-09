@@ -141,43 +141,61 @@ print -P "Creating backup directory: <$backupDest>"
 
 mkdir $backupDest && print -P "\t%B%F{green}Success!!!%f%b" || { print -P "\t%B%F{red}Failed to create <$backupDir> ... exiting!!!%f%b"; exit }
 
-# Perform the rsync backup.
-
-echo "Performing $backupType backup using rsync..."
 previousBackup=''
-case $backupType in
-  'minutely')
-    print -P "Performing a %B%F{green}$backupType%b%f backup"
-    previousBackup=$minutelyBackups[1]
-    print -P "\tPrevious $backupType backup is $minutelyBackups[1]"
-    ;;
-  'hourly')
-    print -P "Performing a %B%F{green}$backupType%b%f backup"
-    previousBackup=$hourlyBackups[1]
-    print -P "\tPrevious $backupType backup is $hourlyBackups[1]"
-    ;;
-  'daily')
-    print -P "Performing a %B%F{green}$backupType%b%f backup"
-    previousBackup=$dailyBackups[1]
-    print -P "\tPrevious $backupType backup is $dailyBackups[1]"
-    ;;
-  'weekly')
-    print -P "Performing a %B%F{green}$backupType%b%f backup"
-    previousBackup=$weeklyBackups[1]
-    print -P "\tPrevious $backupType backup is $weeklyBackups[1]"
-    ;;
-  'monthly')
-    print -P "Performing a %B%F{green}$backupType%b%f backup"
-    previousBackup=$monthlyBackups[1]
-    print -P "\tPrevious $backupType backup is $monthlyBackups[1]"
-    ;;
-  *)
-    print -P "%B%F{red}ERROR%f%b Nope"
-    exit
-    ;;
-esac
+
+#case $backupType in
+#  'minutely')
+#    print -P "Performing a %B%F{green}$backupType%b%f backup"
+#    previousBackup=$minutelyBackups[1]
+#    print -P "\tPrevious $backupType backup is $minutelyBackups[1]"
+#    ;;
+#  'hourly')
+#    print -P "Performing a %B%F{green}$backupType%b%f backup"
+#    previousBackup=$hourlyBackups[1]
+#    print -P "\tPrevious $backupType backup is $hourlyBackups[1]"
+#    ;;
+#  'daily')
+#    print -P "Performing a %B%F{green}$backupType%b%f backup"
+#    previousBackup=$dailyBackups[1]
+#    print -P "\tPrevious $backupType backup is $dailyBackups[1]"
+#    ;;
+#  'weekly')
+#    print -P "Performing a %B%F{green}$backupType%b%f backup"
+#    previousBackup=$weeklyBackups[1]
+#    print -P "\tPrevious $backupType backup is $weeklyBackups[1]"
+#    ;;
+#  'monthly')
+#    print -P "Performing a %B%F{green}$backupType%b%f backup"
+#    previousBackup=$monthlyBackups[1]
+#    print -P "\tPrevious $backupType backup is $monthlyBackups[1]"
+#    ;;
+#  *)
+#    print -P "%B%F{red}ERROR%f%b Nope"
+#    exit
+#    ;;
+#esac
+
+# Get the most recent backup, which will be marked by a symbolic link named
+# 'latestBackup'. The (:A) option expands the symbolic link to the actual name
+# of the parent directory and the (N) option allows this to succeed even if the
+# symbolic link does not exist. This will be used below as the `--link-dest`
+# option to rsync.
+previousBackup=($backupDestRoot'latestBackup'(:AN))
+
+# This is not particularly portable, MacOS supports readlink without the -f
+# argument, however, Linux requires the -f, I'll have to figure out how to do
+# this portably in the future.
+#previousBackup=$(readlink $previousBackup)
+
+echo "previousBackup is $previousBackup..."
+# Perform the rsync backup.
+echo "Performing $backupType backup using rsync..."
 
 # This works even if '--link-dest' is empty.
 /usr/bin/rsync --verbose --archive --delete --link-dest=$previousBackup $backupSource $backupDest
+
+# Move the latestBackup symbolic to the backup just created.
+#unlink $backupDestRoot'latestBackup'
+ln -sfn $backupDest $backupDestRoot'latestBackup'
 
 print -P "%B%F{green}Done%f%b"
