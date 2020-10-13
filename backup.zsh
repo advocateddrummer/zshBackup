@@ -1,6 +1,42 @@
 #!/usr/bin/env zsh
 
-setopt nullglob
+setopt extendedglob nullglob
+
+declare -A defaultValues
+
+defaultValues=( keepMin 4 keepHour 12 keepDay 5 keepWeek 4 keepMon 6 )
+echo "before: ${(kv)defaultValues}"
+
+# TODO: read a config file, support remote backup targets/destinations.
+
+# This logic was pretty much stolen from:
+# https://zdharma.org/Zsh-100-Commits-Club/Zsh-Native-Scripting-Handbook.html#parsing-ini-file
+__out_hash='defaultValues'
+
+while read -r -t 1 line; do
+  # Skip any lines that begin with either a # or ; character.
+  if [[ "$line" = [[:blank:]]#(\;|\#)* ]]; then
+    #echo "skipping $line..."
+    continue
+  # Match "[Section]" line.
+  elif [[ "$line" = (#b)[[:blank:]]#\[([^\]]##)\][[:blank:]]# ]]; then
+      __cur_section="${match[1]}"
+      #echo "found section: $__cur_section"
+  # Match "string:string" line and overwrite the default value found in the
+  # 'defaultValues' associative array.
+  elif
+    # TODO: validate key before inserting into defaultValues.
+    [[ "$line" = (#b)[[:blank:]]#([^[:blank:]=]##)[[:blank:]]#[:][[:blank:]]#(*) ]]; then
+    match[2]="${match[2]%"${match[2]##*[! $'\t']}"}" # severe trick - remove trailing whitespace
+    __access_string="${__out_hash}[${match[1]}]"
+    : "${(P)__access_string::=${match[2]}}"
+    #echo "found key:value pair: ${match[1]}:${match[2]}"
+  fi
+
+done < '/Users/ehereth/Codes/rsync_backup/backup.conf'
+
+echo "after: ${(kv)defaultValues}"
+
 function create_backup_string () {
 
   # Extract first argument which specifies the type of backup string to be
