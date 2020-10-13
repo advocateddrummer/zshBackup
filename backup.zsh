@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
+setopt nullglob
 function create_backup_string () {
 
   # Extract first argument which specifies the type of backup string to be
@@ -180,6 +181,9 @@ previousBackup=''
 # of the parent directory and the (N) option allows this to succeed even if the
 # symbolic link does not exist. This will be used below as the `--link-dest`
 # option to rsync.
+#
+# NOTE: This requires that nullglob be set (setopt nullglob) which may not be
+# desirable. Perhaps attempt to figure out a different way to do this?
 previousBackup=($backupDestRoot'latestBackup'(:AN))
 
 # This is not particularly portable, MacOS supports readlink without the -f
