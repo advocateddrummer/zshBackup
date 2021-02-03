@@ -8,7 +8,7 @@ function parseConfig () {
   # This logic was pretty much stolen from:
   # https://zdharma.org/Zsh-100-Commits-Club/Zsh-Native-Scripting-Handbook.html#parsing-ini-file
   # TODO: make this a function.
-  __out_hash='defaultValues'
+  __out_hash='backupParameters'
 
   while read -r -t 1 line; do
     # Skip any lines that begin with either a # or ; character.
@@ -20,9 +20,9 @@ function parseConfig () {
           __cur_section="${match[1]}"
           #echo "found section: $__cur_section"
           # Match "string:string" line and overwrite the default value found in the
-          # 'defaultValues' associative array.
+          # 'backupParameters' associative array.
         elif
-          # TODO: validate key before inserting into defaultValues.
+          # TODO: validate key before inserting into backupParameters.
           [[ "$line" = (#b)[[:blank:]]#([^[:blank:]=]##)[[:blank:]]#[:][[:blank:]]#(*) ]]; then
           match[2]="${match[2]%"${match[2]##*[! $'\t']}"}" # severe trick - remove trailing whitespace
           __access_string="${__out_hash}[${match[1]}]"
@@ -32,9 +32,9 @@ function parseConfig () {
 
   done < '/Users/ehereth/Codes/rsync_backup/backup.conf'
 
-  for key value in ${(kv)defaultValues}; do
-    echo "$key -> $value"
-  done
+  #for key value in ${(kv)backupParameters}; do
+  #  echo "$key -> $value"
+  #done
 }
 echo "Full command line: $@"
 
@@ -49,15 +49,32 @@ set -- "${@[0,end_opts-1]}" "${@[end_opts+1,-1]}"
 
 echo "Command line after zparseopts: $@"
 
-declare -A defaultValues
+# This associative array holds the default parameters.
+declare -A defaultParameters
 
-defaultValues=( keepMin 4 keepHour 12 keepDay 5 keepWeek 4 keepMon 6 )
-echo "before: ${(kv)defaultValues}"
+defaultParameters=( freqMin  30 # run minutely backups every 30 minutes; should be in increments of 5 minutes
+                    freqHour 2  # run hourly backups every 2 hours
+                    freqDay  1  # run daily backups every day (once a day)
+                    freqWeek 1  # run weekly backups once a week
+                    freqMon  1  # run monthly backups once a month
+                    keepMin  4  # keep 4 minutely backups
+                    keepHour 24 # keep 24 hourly backups
+                    keepDay  7  # keep 7 daily backups
+                    keepWeek 5  # keep 5 weekly backups
+                    keepMon  12 # keep 12 monthly backups
+                  )
+
+# This associative array holds the runtime parameters. It starts out as a copy
+# of the default parameters and may be modified using the backup config file.
+declare -A backupParameters
+backupParameters=( ${(kv)defaultParameters} )
+
+echo "before: ${(kv)backupParameters}"
 
 # TODO: support remote backup targets/destinations.
 parseConfig
 
-echo "after: ${(kv)defaultValues}"
+echo "after: ${(kv)backupParameters}"
 
 function create_backup_string () {
 
