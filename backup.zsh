@@ -1,7 +1,8 @@
 #!/usr/bin/env zsh
 
-setopt extendedglob nullglob
+zmodload zsh/zutil
 
+setopt extendedglob nullglob
 
 function parseConfig () {
   # This logic was pretty much stolen from:
@@ -35,6 +36,19 @@ function parseConfig () {
     echo "$key -> $value"
   done
 }
+echo "Full command line: $@"
+
+zparseopts -D -E -F - \
+           a:=rsyncExtraArgs -args:=rsyncExtraArgs \
+           h=help -help=help \
+	         s=setup -setup=setup || exit 1
+
+# remove first -- or -
+end_opts=$@[(i)(--|-)]
+set -- "${@[0,end_opts-1]}" "${@[end_opts+1,-1]}"
+
+echo "Command line after zparseopts: $@"
+
 declare -A defaultValues
 
 defaultValues=( keepMin 4 keepHour 12 keepDay 5 keepWeek 4 keepMon 6 )
