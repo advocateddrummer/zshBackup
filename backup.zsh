@@ -32,6 +32,17 @@ function parseConfig () {
 
   done < '/Users/ehereth/Codes/rsync_backup/backup.conf'
 
+  # Fix input errors; freqMin needs to be a factor of five for now.
+  if (( $backupParameters[freqMin] % 5 != 0)); then
+    #print -P "%B%F{red}Nope%b%f: freqMin must be a factor of five minutes..."
+    (( tmp=$backupParameters[freqMin] % 5 ))
+    if (( $tmp > 2)); then
+      (( backupParameters[freqMin] = backupParameters[freqMin] += ( 5 - tmp )))
+    else
+      (( backupParameters[freqMin] = backupParameters[freqMin] -= tmp ))
+    fi
+  fi
+
   #for key value in ${(kv)backupParameters}; do
   #  echo "$key -> $value"
   #done
