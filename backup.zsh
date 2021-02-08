@@ -4,6 +4,26 @@ zmodload zsh/zutil
 
 setopt extendedglob nullglob
 
+# This associative array holds the default parameters.
+declare -A defaultParameters
+
+defaultParameters=( freqMin  30 # run minutely backups every 30 minutes; should be in increments of 5 minutes
+                    freqHour 2  # run hourly backups every 2 hours
+                    freqDay  1  # run daily backups every day (once a day)
+                    freqWeek 1  # run weekly backups once a week
+                    freqMon  1  # run monthly backups once a month
+                    keepMin  4  # keep 4 minutely backups
+                    keepHour 24 # keep 24 hourly backups
+                    keepDay  7  # keep 7 daily backups
+                    keepWeek 5  # keep 5 weekly backups
+                    keepMon  12 # keep 12 monthly backups
+                  )
+
+# This associative array holds the runtime parameters. It starts out as a copy
+# of the default parameters and may be modified using the backup config file.
+declare -A backupParameters
+backupParameters=( ${(kv)defaultParameters} )
+
 function parseConfig () {
   # This logic was pretty much stolen from:
   # https://zdharma.org/Zsh-100-Commits-Club/Zsh-Native-Scripting-Handbook.html#parsing-ini-file
@@ -56,25 +76,6 @@ set -- "${@[0,end_opts-1]}" "${@[end_opts+1,-1]}"
 
 echo "Command line after zparseopts: $@"
 
-# This associative array holds the default parameters.
-declare -A defaultParameters
-
-defaultParameters=( freqMin  30 # run minutely backups every 30 minutes; should be in increments of 5 minutes
-                    freqHour 2  # run hourly backups every 2 hours
-                    freqDay  1  # run daily backups every day (once a day)
-                    freqWeek 1  # run weekly backups once a week
-                    freqMon  1  # run monthly backups once a month
-                    keepMin  4  # keep 4 minutely backups
-                    keepHour 24 # keep 24 hourly backups
-                    keepDay  7  # keep 7 daily backups
-                    keepWeek 5  # keep 5 weekly backups
-                    keepMon  12 # keep 12 monthly backups
-                  )
-
-# This associative array holds the runtime parameters. It starts out as a copy
-# of the default parameters and may be modified using the backup config file.
-declare -A backupParameters
-backupParameters=( ${(kv)defaultParameters} )
 
 echo "before: ${(kv)backupParameters}"
 
